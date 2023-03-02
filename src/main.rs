@@ -39,8 +39,8 @@ fn main() {
         let new_dir = format!("./{}", project_name);
 
         match env::set_current_dir(&new_dir) {
-            Ok(()) => println!("Successfully changed working directory to {}", new_dir),
-            Err(e) => println!("Failed to change working directory: {}", e),
+            Ok(()) => println!("✅ Successfully changed working directory to {}", new_dir),
+            Err(e) => println!("❌ Failed to change working directory: {}", e),
         }
 
         let mut child = Command::new("pnpm")
@@ -53,11 +53,11 @@ fn main() {
         match child.try_wait() {
             Ok(Some(status)) => println!("✅ exited with: {status}"),
             Ok(None) => {
-                println!("status not ready yet, let's really wait");
+                println!("❌ status not ready yet, let's really wait");
                 let res = child.wait();
                 println!("result: {res:?}");
             }
-            Err(e) => println!("error attempting to wait: {e}"),
+            Err(e) => println!("❌ error attempting to wait: {e}"),
         }
     }
 
@@ -73,6 +73,6 @@ fn main() {
 
         println!("{}", String::from_utf8_lossy(&git_output.stdout).trim_end());
     } else {
-        println!("Skipping git clone as git repository is not specified.");
+        println!("✅ Skipping git clone as git repository is not specified.");
     }
 }
