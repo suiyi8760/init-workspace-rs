@@ -57,7 +57,7 @@ fn main() {
 
         // 不await一下主进程结束 子进程也结束了 就看不到spawn的输出内容
         match child.try_wait() {
-            Ok(Some(status)) => println!("✅ exited with: {status}"),
+            Ok(Some(status)) => println!("exited with: {status}"),
             Ok(None) => {
                 println!("⌛️ status not ready yet, let's really wait");
                 let res = child.wait();
@@ -69,19 +69,18 @@ fn main() {
 
     // Git clone
     if let Some(git) = args.git {
-        let git_command = format!("⌛️ git clone {} ./{}/{}", git, project_name, project_name);
-        println!("{}", git_command);
+        let git_command = format!("git clone {} ./{}/{}", git, project_name, project_name);
         let mut git_output = Command::new("sh")
             .arg("-c")
-            .arg(git_command)
+            .arg(&git_command)
             .spawn()
             .expect("Failed to run git clone");
 
         // 不await一下主进程结束 子进程也结束了 就看不到spawn的输出内容
         match git_output.try_wait() {
-            Ok(Some(status)) => println!("✅ finish git clone: {status}"),
+            Ok(Some(status)) => println!("finish git clone: {status}"),
             Ok(None) => {
-                println!("⌛️ git cloneing...");
+                println!("⌛️ git cloning... :{}", &git_command);
                 let res = git_output.wait();
                 println!("result: {res:?}");
             }
