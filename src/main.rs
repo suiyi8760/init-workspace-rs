@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, env};
 use std::path::Path;
 use std::process::Command;
 use structopt::StructOpt;
@@ -20,40 +20,50 @@ fn main() {
     let project_name = &args.project;
 
     if Path::new(project_name).exists() {
-        println!("Project folder '{}' already exists, exiting.", project_name);
+        println!("❌ Project folder '{}' already exists, exiting.", project_name);
         return;
     }
 
     // Create project folder
-    fs::create_dir(project_name).expect("Failed to create project folder");
+    fs::create_dir(project_name).expect("❌ Failed to create project folder");
 
     // Create project template
     fs::create_dir(project_name.to_owned() + "/creatives")
-        .expect("Failed to create creatives folder");
+        .expect("❌ Failed to create creatives folder");
     fs::create_dir(project_name.to_owned() + "/prod-doc")
-        .expect("Failed to create prod-doc folder");
+        .expect("❌ Failed to create prod-doc folder");
 
-    println!("Created project folders.");
+    println!("✅ Project folders created");
 
     if args.init {
-        // let new_dir = format!("./{}", project_name);
+        let new_dir = format!("./{}", project_name);
 
-        /* match env::set_current_dir(&new_dir) {
+        match env::set_current_dir(&new_dir) {
             Ok(()) => println!("Successfully changed working directory to {}", new_dir),
             Err(e) => println!("Failed to change working directory: {}", e),
-        } */
+        }
 
-        let output = Command::new("cd")
-            .arg(format!("./{}", project_name))
-            .output()
-            .expect("Failed to run git clone");
+        let mut child = Command::new("pnpm")
+            .arg("create")
+            .arg("@yy/hago-app")
+            .spawn()
+            .unwrap();
 
-        println!("{}", String::from_utf8_lossy(&output.stdout).trim_end());
+        // 不await一下主进程结束 子进程也结束了 就看不到spawn的输出内容
+        match child.try_wait() {
+            Ok(Some(status)) => println!("✅ exited with: {status}"),
+            Ok(None) => {
+                println!("status not ready yet, let's really wait");
+                let res = child.wait();
+                println!("result: {res:?}");
+            }
+            Err(e) => println!("error attempting to wait: {e}"),
+        }
     }
 
     // Git clone
     if let Some(git) = args.git {
-        let git_command = format!("git clone {} ./{}/{}", git, project_name, project_name);
+        let git_command = format!("⌛️ git clone {} ./{}/{}", git, project_name, project_name);
         println!("{}", git_command);
         let git_output = Command::new("sh")
             .arg("-c")
