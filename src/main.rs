@@ -1,6 +1,6 @@
-use std::{fs, env};
 use std::path::Path;
 use std::process::Command;
+use std::{env, fs};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -20,7 +20,10 @@ fn main() {
     let project_name = &args.project;
 
     if Path::new(project_name).exists() {
-        println!("❌ Project folder '{}' already exists, exiting.", project_name);
+        println!(
+            "❌ Project folder '{}' already exists, exiting.",
+            project_name
+        );
         return;
     }
 
@@ -36,7 +39,10 @@ fn main() {
     println!("✅ Project folders created");
 
     if args.init {
-        let new_dir = format!("./{}", project_name);
+        let new_dir = format!("./{}/{}", project_name, project_name);
+
+        // 创建
+        fs::create_dir(&new_dir).expect("❌ Failed to create prod-doc folder");
 
         match env::set_current_dir(&new_dir) {
             Ok(()) => println!("✅ Successfully changed working directory to {}", new_dir),
@@ -65,13 +71,22 @@ fn main() {
     if let Some(git) = args.git {
         let git_command = format!("⌛️ git clone {} ./{}/{}", git, project_name, project_name);
         println!("{}", git_command);
-        let git_output = Command::new("sh")
+        let mut git_output = Command::new("sh")
             .arg("-c")
             .arg(git_command)
-            .output()
+            .spawn()
             .expect("Failed to run git clone");
 
-        println!("{}", String::from_utf8_lossy(&git_output.stdout).trim_end());
+        // 不await一下主进程结束 子进程也结束了 就看不到spawn的输出内容
+        match git_output.try_wait() {
+            Ok(Some(status)) => println!("✅ finish git clone: {status}"),
+            Ok(None) => {
+                println!("⌛️ git cloneing...");
+                let res = git_output.wait();
+                println!("result: {res:?}");
+            }
+            Err(e) => println!("❌ error attempting to wait: {e}"),
+        }
     } else {
         println!("✅ Skipping git clone as git repository is not specified.");
     }
