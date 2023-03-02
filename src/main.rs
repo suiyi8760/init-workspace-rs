@@ -53,7 +53,7 @@ fn main() {
         match child.try_wait() {
             Ok(Some(status)) => println!("✅ exited with: {status}"),
             Ok(None) => {
-                println!("❌ status not ready yet, let's really wait");
+                println!("⌛️ status not ready yet, let's really wait");
                 let res = child.wait();
                 println!("result: {res:?}");
             }
